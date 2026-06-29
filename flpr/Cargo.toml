@@ -1,0 +1,23 @@
+# Standalone RISC-V (rv32emc) firmware for the nRF54L15 FLPR core.
+#
+# One library of shared helpers (src/lib.rs) plus one binary per demo program
+# (src/bin/*.rs). NOT part of the Hubris ARM workspace; built by `cargo xtask
+# flpr` with a nightly toolchain + -Zbuild-std. Each program's raw binary is
+# embedded by the `flpr-control` Hubris task and launched onto the FLPR.
+[workspace]
+
+[package]
+name = "flpr-firmware"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "flpr"
+
+[profile.release]
+opt-level = "s"
+lto = true
+debug = true
+
+[profile.dev]
+opt-level = "s"

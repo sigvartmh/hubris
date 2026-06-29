@@ -1,0 +1,6 @@
+# Nordic nRF54L15-DK (PCA10156), application core.
+#
+# Requires a probe-rs / humility new enough to know the nRF54L15 target
+# (added to probe-rs after 0.22.0).
+[probe-rs]
+chip-name = "nRF54L15"

@@ -15,6 +15,7 @@ mod config;
 mod dist;
 mod elf;
 mod flash;
+mod flpr;
 mod gha_prepare_artifacts;
 mod graph;
 mod humility;
@@ -76,6 +77,16 @@ enum Xtask {
         /// rebuilding even if it looks like we need to.
         #[clap(long)]
         dirty: bool,
+    },
+
+    /// Builds the nRF54L15 FLPR (RISC-V) firmware into a raw binary that the
+    /// `flpr-control` task embeds. Run this before `xtask dist` for apps that
+    /// include that task. Requires a nightly toolchain with the rust-src
+    /// component.
+    Flpr {
+        /// Request verbosity from the firmware build.
+        #[clap(short)]
+        verbose: bool,
     },
 
     /// Runs `xtask dist` and flashes the image onto an attached target
@@ -543,6 +554,9 @@ fn run(xtask: Xtask) -> Result<()> {
         }
         Xtask::Graph { output, cfg } => {
             graph::task_graph(&cfg, &output)?;
+        }
+        Xtask::Flpr { verbose } => {
+            flpr::run(verbose)?;
         }
         Xtask::Print {
             cfg,

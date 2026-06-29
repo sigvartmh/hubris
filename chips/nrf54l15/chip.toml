@@ -1,0 +1,55 @@
+# Peripheral map for the Nordic nRF54L15 application core (Cortex-M33).
+#
+# Addresses are the *secure* peripheral aliases (0x5000_0000 + offset); the
+# application core boots in the Secure state. Values are taken from the Zephyr
+# devicetree (dts/vendor/nordic/nrf54l_05_10_15.dtsi) and match the secure
+# (`_S`) constants exported by the `nrf-pac` crate (feature `nrf54l15-app`).
+
+# GPIO port P0 (7 pins) @ 0x5010_a000
+[gpio0]
+address = 0x5010a000
+size = 0x300
+
+# GPIO port P1 (17 pins) @ 0x500d_8200
+[gpio1]
+address = 0x500d8200
+size = 0x300
+
+# GPIO port P2 (11 pins) @ 0x5005_0400 -- DK LED0 is P2.09
+[gpio2]
+address = 0x50050400
+size = 0x300
+
+# UARTE20 @ 0x500c_6000 -- DK virtual COM port (P1.04 TX / P1.05 RX)
+[uarte20]
+address = 0x500c6000
+size = 0x1000
+interrupts = { irq = 198 }
+
+# VPR @ 0x5004_c000 -- controls the FLPR (RISC-V) coprocessor (INITPC, CPURUN)
+# and is the app-side endpoint of the VEVIF mailbox (FLPR->app event IRQ 76).
+[vpr00]
+address = 0x5004c000
+size = 0x1000
+interrupts = { irq = 76 }
+
+# SPU00 @ 0x5004_0000 -- security controller for the 0x5004_xxxx peripheral
+# group. The launcher uses it to mark the VPR secure before programming it.
+[spu00]
+address = 0x50040000
+size = 0x1000
+
+# CRACEN @ 0x5004_8000 -- crypto accelerator wrapper: the ENABLE register
+# (offset 0x400) gates the CryptoMaster / RNG / PKE modules; EVENTS/INTEN gate
+# the IRQ. The actual engines live in CRACENCORE.
+[cracen]
+address = 0x50048000
+size = 0x1000
+interrupts = { irq = 72 }
+
+# CRACENCORE @ 0x5180_0000 -- CRACEN engine block. Sub-blocks: CryptoMaster DMA
+# @ 0 (AES/SHA), RNG @ 0x1000, PKE registers @ 0x2000, PKE operand RAM @ 0x8000,
+# PKE microcode RAM @ 0xc000. The 64 KiB window spans all of them.
+[cracencore]
+address = 0x51800000
+size = 0x10000

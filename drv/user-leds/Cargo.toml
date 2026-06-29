@@ -8,6 +8,7 @@ cfg-if.workspace = true
 enum-map.workspace = true
 idol-runtime.workspace = true
 lpc55-pac = { workspace = true, optional = true }
+nrf-pac = { workspace = true, optional = true, features = ["nrf54l15-app"] }
 num-traits.workspace = true
 stm32f3 = { workspace = true, optional = true, features = ["stm32f303"] }
 stm32f4 = { workspace = true, optional = true, features = ["stm32f407"] }
@@ -28,6 +29,7 @@ idol.workspace = true
 stm32g0 = ["drv-stm32xx-sys-api/family-stm32g0"]
 stm32h7 = ["drv-stm32xx-sys-api/family-stm32h7"]
 lpc55 = ["lpc55-pac", "drv-lpc55-gpio-api"]
+nrf54l15 = ["nrf-pac"]
 panic-messages = ["userlib/panic-messages"]
 no-ipc-counters = ["idol/no-counters"]
 

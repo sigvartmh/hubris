@@ -253,6 +253,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cdb031dd78e28731d87d56cc8ffef4a8f36ca26c38fe2de700543e627f8a464a"
 
 [[package]]
+name = "az"
+version = "1.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7b7e4c2464d97fe331d41de9d5db0def0a96f4d823b8b32a2efd503578988973"
+
+[[package]]
 name = "bare-metal"
 version = "0.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -962,6 +968,27 @@ name = "debug-ignore"
 version = "1.0.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ffe7ed1d93f4553003e20b629abe9085e1e81b1429520f897f8f8860bc6dfc21"
+
+[[package]]
+name = "demo-efr32mg24"
+version = "0.1.0"
+dependencies = [
+ "build-util",
+ "cortex-m",
+ "cortex-m-rt",
+ "kern",
+]
+
+[[package]]
+name = "demo-nrf54l15-dk"
+version = "0.1.0"
+dependencies = [
+ "build-util",
+ "cortex-m",
+ "cortex-m-rt",
+ "kern",
+ "nrf-pac",
+]
 
 [[package]]
 name = "demo-stm32f4-discovery"
@@ -2091,6 +2118,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "drv-nrf54l15-uart"
+version = "0.1.0"
+dependencies = [
+ "nrf-pac",
+ "userlib",
+]
+
+[[package]]
 name = "drv-onewire"
 version = "0.1.0"
 dependencies = [
@@ -2878,6 +2913,7 @@ dependencies = [
  "idol",
  "idol-runtime",
  "lpc55-pac",
+ "nrf-pac",
  "num-traits",
  "stm32f3",
  "stm32f4",
@@ -2956,6 +2992,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "efr32mg24-crypto"
+version = "0.1.0"
+dependencies = [
+ "userlib",
+]
+
+[[package]]
+name = "efr32mg24-gfx"
+version = "0.1.0"
+dependencies = [
+ "embedded-graphics-core",
+]
+
+[[package]]
 name = "either"
 version = "1.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2985,6 +3035,29 @@ name = "embedded-crc-macros"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4f1c75747a43b086df1a87fb2a889590bc0725e0abf54bba6d0c4bf7bd9e762c"
+
+[[package]]
+name = "embedded-graphics"
+version = "0.8.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4e8da660bb0c829b34a56a965490597f82a55e767b91f9543be80ce8ccb416fe"
+dependencies = [
+ "az",
+ "byteorder",
+ "embedded-graphics-core",
+ "float-cmp",
+ "micromath",
+]
+
+[[package]]
+name = "embedded-graphics-core"
+version = "0.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "95743bef3ff70fcba3930246c4e6872882bbea0dcc6da2ca860112e0cd4bd09f"
+dependencies = [
+ "az",
+ "byteorder",
+]
 
 [[package]]
 name = "embedded-hal"
@@ -3175,6 +3248,15 @@ name = "fletcher"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "78b6ad5124f2e4d1ba8048f0366d3b5e7b3ff8ef55fb1f9d1b167c8e67181070"
+
+[[package]]
+name = "float-cmp"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "98de4bbd547a563b716d8dfa9aad1cb19bfab00f4fa09a6a4ed21dbcf44ce9c4"
+dependencies = [
+ "num-traits",
+]
 
 [[package]]
 name = "fnv"
@@ -4253,6 +4335,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "micromath"
+version = "2.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c3c8dda44ff03a2f238717214da50f65d5a53b45cd213a7370424ffdb6fae815"
+
+[[package]]
 name = "minibar"
 version = "0.1.0"
 dependencies = [
@@ -4384,6 +4472,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "72ef4a56884ca558e5ddb05a1d1e7e1bfd9a68d9ed024c21704cc98872dae1bb"
 
 [[package]]
+name = "nrf-pac"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "83531b9f1e19f493018da9b8b20359e4cedd6d1357553b1ac50f3fa27a0104fa"
+dependencies = [
+ "cortex-m",
+ "cortex-m-rt",
+]
+
+[[package]]
 name = "num"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4480,6 +4578,10 @@ dependencies = [
  "autocfg",
  "libm",
 ]
+
+[[package]]
+name = "oberon-crypto"
+version = "0.1.0"
 
 [[package]]
 name = "object"
@@ -6036,6 +6138,243 @@ dependencies = [
 ]
 
 [[package]]
+name = "task-efr32mg24-aesava"
+version = "0.1.0"
+dependencies = [
+ "efr32mg24-crypto",
+ "efr32mg24-gfx",
+ "userlib",
+]
+
+[[package]]
+name = "task-efr32mg24-aesbench"
+version = "0.1.0"
+dependencies = [
+ "efr32mg24-crypto",
+ "efr32mg24-gfx",
+ "userlib",
+]
+
+[[package]]
+name = "task-efr32mg24-console"
+version = "0.1.0"
+dependencies = [
+ "efr32mg24-crypto",
+ "efr32mg24-gfx",
+ "embedded-graphics",
+ "hubris-num-tasks",
+ "userlib",
+]
+
+[[package]]
+name = "task-efr32mg24-cpugraph"
+version = "0.1.0"
+dependencies = [
+ "efr32mg24-gfx",
+ "hubris-num-tasks",
+ "userlib",
+]
+
+[[package]]
+name = "task-efr32mg24-crypto"
+version = "0.1.0"
+dependencies = [
+ "efr32mg24-crypto",
+ "efr32mg24-gfx",
+ "userlib",
+]
+
+[[package]]
+name = "task-efr32mg24-cryptobench"
+version = "0.1.0"
+dependencies = [
+ "efr32mg24-crypto",
+ "efr32mg24-gfx",
+ "userlib",
+]
+
+[[package]]
+name = "task-efr32mg24-cryptosrv"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "build-util",
+ "efr32mg24-crypto",
+ "oberon-crypto",
+ "userlib",
+]
+
+[[package]]
+name = "task-efr32mg24-display"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "build-util",
+ "efr32mg24-gfx",
+ "userlib",
+]
+
+[[package]]
+name = "task-efr32mg24-ecdh"
+version = "0.1.0"
+dependencies = [
+ "efr32mg24-crypto",
+ "efr32mg24-gfx",
+ "userlib",
+]
+
+[[package]]
+name = "task-efr32mg24-ecdsa"
+version = "0.1.0"
+dependencies = [
+ "efr32mg24-crypto",
+ "efr32mg24-gfx",
+ "userlib",
+]
+
+[[package]]
+name = "task-efr32mg24-fractal"
+version = "0.1.0"
+dependencies = [
+ "efr32mg24-gfx",
+ "userlib",
+]
+
+[[package]]
+name = "task-efr32mg24-gcm"
+version = "0.1.0"
+dependencies = [
+ "efr32mg24-crypto",
+ "efr32mg24-gfx",
+ "userlib",
+]
+
+[[package]]
+name = "task-efr32mg24-hashchain"
+version = "0.1.0"
+dependencies = [
+ "efr32mg24-crypto",
+ "efr32mg24-gfx",
+ "userlib",
+]
+
+[[package]]
+name = "task-efr32mg24-hello"
+version = "0.1.0"
+dependencies = [
+ "ringbuf",
+ "userlib",
+]
+
+[[package]]
+name = "task-efr32mg24-life"
+version = "0.1.0"
+dependencies = [
+ "efr32mg24-gfx",
+ "userlib",
+]
+
+[[package]]
+name = "task-efr32mg24-load"
+version = "0.1.0"
+dependencies = [
+ "userlib",
+]
+
+[[package]]
+name = "task-efr32mg24-logo"
+version = "0.1.0"
+dependencies = [
+ "efr32mg24-gfx",
+ "userlib",
+]
+
+[[package]]
+name = "task-efr32mg24-mactamper"
+version = "0.1.0"
+dependencies = [
+ "efr32mg24-crypto",
+ "efr32mg24-gfx",
+ "userlib",
+]
+
+[[package]]
+name = "task-efr32mg24-matrix"
+version = "0.1.0"
+dependencies = [
+ "efr32mg24-gfx",
+ "userlib",
+]
+
+[[package]]
+name = "task-efr32mg24-plasma"
+version = "0.1.0"
+dependencies = [
+ "efr32mg24-gfx",
+ "userlib",
+]
+
+[[package]]
+name = "task-efr32mg24-pong"
+version = "0.1.0"
+dependencies = [
+ "efr32mg24-gfx",
+ "userlib",
+]
+
+[[package]]
+name = "task-efr32mg24-shaviz"
+version = "0.1.0"
+dependencies = [
+ "efr32mg24-crypto",
+ "efr32mg24-gfx",
+ "userlib",
+]
+
+[[package]]
+name = "task-efr32mg24-snake"
+version = "0.1.0"
+dependencies = [
+ "efr32mg24-gfx",
+ "userlib",
+]
+
+[[package]]
+name = "task-efr32mg24-stars"
+version = "0.1.0"
+dependencies = [
+ "efr32mg24-gfx",
+ "userlib",
+]
+
+[[package]]
+name = "task-efr32mg24-task-viewer"
+version = "0.1.0"
+dependencies = [
+ "efr32mg24-gfx",
+ "embedded-graphics",
+ "hubris-num-tasks",
+ "userlib",
+]
+
+[[package]]
+name = "task-efr32mg24-temp"
+version = "0.1.0"
+dependencies = [
+ "efr32mg24-gfx",
+ "userlib",
+]
+
+[[package]]
+name = "task-efr32mg24-trngrain"
+version = "0.1.0"
+dependencies = [
+ "efr32mg24-crypto",
+ "efr32mg24-gfx",
+ "userlib",
+]
+
+[[package]]
 name = "task-ereportulator"
 version = "0.1.0"
 dependencies = [
@@ -6051,6 +6390,17 @@ dependencies = [
  "userlib",
  "zerocopy 0.8.27",
  "zerocopy-derive 0.8.27",
+]
+
+[[package]]
+name = "task-flpr-control"
+version = "0.1.0"
+dependencies = [
+ "build-util",
+ "drv-user-leds-api",
+ "nrf-pac",
+ "ringbuf",
+ "userlib",
 ]
 
 [[package]]
@@ -6355,6 +6705,23 @@ dependencies = [
  "userlib",
  "zerocopy 0.8.27",
  "zerocopy-derive 0.8.27",
+]
+
+[[package]]
+name = "task-nrf54l15-buttons"
+version = "0.1.0"
+dependencies = [
+ "drv-user-leds-api",
+ "nrf-pac",
+ "userlib",
+]
+
+[[package]]
+name = "task-nrf54l15-cryptosrv"
+version = "0.1.0"
+dependencies = [
+ "oberon-crypto",
+ "userlib",
 ]
 
 [[package]]

@@ -1,0 +1,15 @@
+[package]
+name = "oberon-crypto"
+version = "0.1.0"
+edition = "2024"
+build = "build.rs"
+# Declares that this crate links the native `oberon` library (so cargo links it
+# at most once and serializes the build script).
+links = "oberon"
+
+[lib]
+test = false
+bench = false
+
+[lints]
+workspace = true

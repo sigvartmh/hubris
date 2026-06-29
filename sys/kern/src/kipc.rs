@@ -46,6 +46,11 @@ pub fn handle_kernel_message(
         Ok(Kipcnum::ReadPanicMessage) => {
             read_panic_message(tasks, caller, args.message?, args.response?)
         }
+        Ok(Kipcnum::Log) => log(tasks, caller, args.message?),
+        #[cfg(feature = "cpu-profiling")]
+        Ok(Kipcnum::GetTaskCpuSamples) => {
+            get_task_cpu_samples(tasks, caller, args.response?)
+        }
 
         _ => {
             // Task has sent an unknown message to the kernel. That's bad.
@@ -57,6 +62,73 @@ pub fn handle_kernel_message(
 }
 fn reset(_tasks: &mut [Task], _caller: usize, _message: USlice<u8>) -> ! {
     arch::reset()
+}
+
+/// Writes the per-task CPU sample counts (one little-endian `u32` per task) into
+/// the caller's response buffer. The caller diffs successive reads to get a
+/// per-task CPU rate. See `arch::read_cpu_samples`.
+#[cfg(feature = "cpu-profiling")]
+fn get_task_cpu_samples(
+    tasks: &mut [Task],
+    caller: usize,
+    response: USlice<u8>,
+) -> Result<NextTask, UserError> {
+    let mut samples = [0u32; arch::MAX_SAMPLED_TASKS];
+    arch::read_cpu_samples(&mut samples);
+
+    let mut response = response;
+    let dst = tasks[caller].try_write(&mut response)?;
+    let mut written = 0;
+    'fill: for s in &samples {
+        for b in s.to_le_bytes() {
+            if written >= dst.len() {
+                break 'fill;
+            }
+            dst[written] = b;
+            written += 1;
+        }
+    }
+
+    tasks[caller]
+        .save_mut()
+        .set_send_response_and_length(0, written);
+    Ok(NextTask::Same)
+}
+
+/// Emits the caller's message bytes on SWO via the kernel (privileged) ITM.
+///
+/// Any task may call this. The kernel reads the bytes straight out of the
+/// caller's memory (validated by `try_read`) and writes them to the ITM
+/// stimulus port -- something unprivileged tasks can't do directly on this
+/// hardware. It's a no-op if the application hasn't brought up trace.
+fn log(
+    tasks: &mut [Task],
+    caller: usize,
+    message: USlice<u8>,
+) -> Result<NextTask, UserError> {
+    // Attribute the line: "kernel<-t<caller>: " so interleaved logs from
+    // different tasks are distinguishable. `caller` is the task-table index,
+    // matching the ID column in `humility tasks`.
+    arch::log_bytes(b"kernel<-t");
+    let mut digits = [0u8; 3]; // task indices are small
+    let mut n = caller;
+    let mut i = digits.len();
+    loop {
+        i -= 1;
+        digits[i] = b'0' + (n % 10) as u8;
+        n /= 10;
+        if n == 0 || i == 0 {
+            break;
+        }
+    }
+    arch::log_bytes(&digits[i..]);
+    arch::log_bytes(b": ");
+
+    let bytes = tasks[caller].try_read(&message)?;
+    arch::log_bytes(bytes);
+    // `try_read` borrow ends above; now resume the caller with an empty reply.
+    tasks[caller].save_mut().set_send_response_and_length(0, 0);
+    Ok(NextTask::Same)
 }
 
 fn deserialize_message<T>(

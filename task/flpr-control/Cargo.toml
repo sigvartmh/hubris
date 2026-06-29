@@ -1,0 +1,24 @@
+[package]
+name = "task-flpr-control"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+drv-user-leds-api = { path = "../../drv/user-leds-api" }
+nrf-pac = { workspace = true, features = ["nrf54l15-app"] }
+ringbuf = { path = "../../lib/ringbuf" }
+userlib = { path = "../../sys/userlib" }
+
+[build-dependencies]
+build-util = { path = "../../build/util" }
+
+# This section is here to discourage RLS/rust-analyzer from doing test builds,
+# since test builds don't work for cross compilation.
+[[bin]]
+name = "task-flpr-control"
+test = false
+doctest = false
+bench = false
+
+[lints]
+workspace = true

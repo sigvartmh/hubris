@@ -1,0 +1,83 @@
+name = "demo-nrf54l15-dk"
+target = "thumbv8m.main-none-eabihf"
+chip = "../../chips/nrf54l15"
+memory = "memory.toml"
+board = "nrf54l15dk"
+stacksize = 1024
+
+[kernel]
+name = "demo-nrf54l15-dk"
+requires = {flash = 32768, ram = 2560}
+stacksize = 1024
+
+[tasks.jefe]
+name = "task-jefe"
+priority = 0
+max-sizes = {flash = 16384, ram = 4096}
+start = true
+stacksize = 1536
+notifications = ["fault", "timer"]
+
+[tasks.user_leds]
+name = "drv-user-leds"
+features = ["nrf54l15"]
+priority = 2
+max-sizes = {flash = 8192, ram = 2048}
+uses = ["gpio1", "gpio2"]
+start = true
+stacksize = 512
+notifications = ["timer"]
+
+[tasks.buttons]
+name = "task-nrf54l15-buttons"
+priority = 5
+max-sizes = {flash = 8192, ram = 2048}
+uses = ["gpio1"]
+start = true
+stacksize = 512
+task-slots = ["user_leds"]
+
+[tasks.uart]
+name = "drv-nrf54l15-uart"
+priority = 3
+max-sizes = {flash = 8192, ram = 2048}
+uses = ["uarte20", "gpio1", "gpio0"]
+extern-regions = ["flpr_sram", "crypto_sram"]
+start = true
+stacksize = 512
+
+[tasks.flpr_control]
+name = "task-flpr-control"
+priority = 4
+max-sizes = {flash = 12288, ram = 4096}
+uses = ["vpr00", "spu00", "gpio1"]
+extern-regions = ["flpr_sram", "crypto_sram"]
+start = true
+stacksize = 1536
+task-slots = ["user_leds"]
+notifications = ["timer", "vevif-irq"]
+interrupts = {"vpr00.irq" = "vevif-irq"}
+
+# Crypto server: owns CRACEN (CryptoMaster + PKE) and benchmarks it against the
+# Oberon software library. Stage 1: Oberon-only boot KAT (no CRACEN driver yet).
+[tasks.cryptosrv]
+name = "task-nrf54l15-cryptosrv"
+priority = 5
+max-sizes = {flash = 65536, ram = 32768}
+uses = ["cracen", "cracencore"]
+extern-regions = ["crypto_sram"]
+start = true
+stacksize = 4096
+
+[tasks.idle]
+name = "task-idle"
+priority = 7
+max-sizes = {flash = 256, ram = 256}
+stacksize = 256
+start = true
+# The kernel clocks SysTick from the CPU (processor) clock. On the nRF54L15,
+# `wfi` gates that clock in sleep, which freezes SysTick and deadlocks the
+# kernel timer. `insomniac` makes idle spin instead of sleeping, keeping the
+# clock (and SysTick) alive. Trade-off: no low-power sleep. A proper low-power
+# story would drive the kernel tick from the always-on GRTC instead.
+features = ["insomniac"]

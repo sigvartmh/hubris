@@ -1,4 +1,4 @@
-target/
+itarget/
 itm.txt
 *.swp
 hubris.testout.*
@@ -17,3 +17,6 @@ hubris.testout.*
 .nvim.lua
 .zed/settings.json
 .dir-locals.el
+# pixi environments
+.pixi
+

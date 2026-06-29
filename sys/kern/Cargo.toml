@@ -37,6 +37,9 @@ phash-gen = { path = "../../build/phash-gen" }
 [features]
 dump = []
 nano = []
+# Per-task statistical CPU-usage sampling, exposed via the GetTaskCpuSamples
+# kipc. Off by default so apps that don't want it pay no code/RAM cost.
+cpu-profiling = []
 
 [lib]
 test = false

@@ -139,6 +139,34 @@ pub fn reinit_task(task: usize, start: bool) {
     );
 }
 
+/// Asks the kernel to emit `bytes` on SWO (ITM stimulus port 0).
+///
+/// Unprivileged tasks can't reliably reach the ITM on all hardware, so the
+/// kernel does the write on our behalf. This is a no-op if the application
+/// hasn't brought up trace. Output is best-effort and unframed -- include your
+/// own newlines.
+pub fn log(bytes: &[u8]) {
+    let (_rc, _len) =
+        sys_send(TaskId::KERNEL, Kipcnum::Log as u16, bytes, &mut [], &[]);
+}
+
+/// Reads the kernel's per-task CPU sample counts into `out`, returning the
+/// number of tasks reported.
+///
+/// Each entry is a cumulative count of 1 kHz scheduler ticks during which that
+/// task was running. Call this periodically and diff successive reads to get a
+/// per-task CPU rate; the idle task's share is the free CPU.
+pub fn get_task_cpu_samples(out: &mut [u32]) -> usize {
+    let (_rc, len) = sys_send(
+        TaskId::KERNEL,
+        Kipcnum::GetTaskCpuSamples as u16,
+        &[],
+        out.as_mut_bytes(),
+        &[],
+    );
+    len / core::mem::size_of::<u32>()
+}
+
 pub fn fault_task(task: usize) {
     // Coerce `task` to a known size (Rust doesn't assume that usize == u32)
     let task = task as u32;

@@ -276,6 +276,91 @@ pub unsafe fn set_clock_freq(tick_divisor: u32) {
     CLOCK_FREQ_KHZ.store(tick_divisor, Ordering::Relaxed);
 }
 
+/// Emits `bytes` on ITM stimulus port 0 (-> SWO), if trace is enabled.
+///
+/// This is the privileged half of the `Log` kipc: unprivileged tasks can't
+/// reliably reach the ITM stimulus port, but the kernel can, so tasks ask the
+/// kernel to emit their log text here. It's a no-op unless the application has
+/// enabled trace (DEMCR.TRCENA) and the ITM (ITM_TCR.ITMENA) -- e.g. in its
+/// `main()` during SWO bring-up -- so it's harmless on images without SWO.
+///
+/// Cortex-M0+ (ARMv6-M) has no ITM, so this compiles to nothing there.
+#[cfg(any(armv7m, armv8m))]
+pub fn log_bytes(bytes: &[u8]) {
+    const DEMCR: *const u32 = 0xE000_EDFC as *const u32;
+    const ITM_TCR: *const u32 = 0xE000_0E80 as *const u32;
+    const ITM_STIM0: *mut u32 = 0xE000_0000 as *mut u32;
+    const DEMCR_TRCENA: u32 = 1 << 24;
+    const ITM_TCR_ITMENA: u32 = 1 << 0;
+
+    // Safety: these are fixed CoreSight debug registers. DEMCR is always
+    // readable; only touch the ITM once trace is on, so a powered-down ITM is
+    // never accessed.
+    unsafe {
+        if core::ptr::read_volatile(DEMCR) & DEMCR_TRCENA == 0 {
+            return;
+        }
+        if core::ptr::read_volatile(ITM_TCR) & ITM_TCR_ITMENA == 0 {
+            return;
+        }
+        for &byte in bytes {
+            // Bounded spin on FIFO-ready so a stalled/absent trace sink can't
+            // wedge the kernel.
+            for _ in 0..10_000 {
+                if core::ptr::read_volatile(ITM_STIM0) != 0 {
+                    break;
+                }
+            }
+            core::ptr::write_volatile(ITM_STIM0 as *mut u8, byte);
+        }
+    }
+}
+
+#[cfg(armv6m)]
+pub fn log_bytes(_bytes: &[u8]) {}
+
+/// Statistical CPU-usage profiler (enabled by the `cpu-profiling` feature).
+///
+/// Once per `SysTick` (the 1 kHz kernel tick) we record which task was running
+/// when the tick fired. Accumulated over time, the per-task counts approximate
+/// each task's share of the CPU. A reader takes successive snapshots and diffs
+/// them to get a rate. Indices match the task table; the idle task's share is
+/// the free CPU.
+#[cfg(feature = "cpu-profiling")]
+pub const MAX_SAMPLED_TASKS: usize = 64;
+
+#[cfg(feature = "cpu-profiling")]
+static CPU_SAMPLES: [AtomicU32; MAX_SAMPLED_TASKS] = {
+    #[allow(clippy::declare_interior_mutable_const)]
+    const ZERO: AtomicU32 = AtomicU32::new(0);
+    [ZERO; MAX_SAMPLED_TASKS]
+};
+
+/// Records a CPU sample for `index` (the currently-running task). Cheap enough
+/// to call from the tick ISR.
+///
+/// Uses load+store rather than `fetch_add` (which ARMv6-M lacks). This is safe
+/// because `SysTick` is the only writer and can't preempt itself; readers only
+/// load.
+#[cfg(feature = "cpu-profiling")]
+fn sample_cpu(index: usize) {
+    if index < MAX_SAMPLED_TASKS {
+        let v = CPU_SAMPLES[index].load(Ordering::Relaxed);
+        CPU_SAMPLES[index].store(v.wrapping_add(1), Ordering::Relaxed);
+    }
+}
+
+/// Copies the per-task sample counts into `out` (saturating at the array size).
+#[cfg(feature = "cpu-profiling")]
+pub fn read_cpu_samples(out: &mut [u32]) {
+    for (i, slot) in out.iter_mut().enumerate() {
+        *slot = match CPU_SAMPLES.get(i) {
+            Some(a) => a.load(Ordering::Relaxed),
+            None => 0,
+        };
+    }
+}
+
 pub fn reinitialize(task: &mut task::Task) {
     *task.save_mut() = SavedState::default();
     let initial_stack = task.descriptor().initial_stack as usize;
@@ -1068,6 +1153,21 @@ static TICKS: [AtomicU32; 2] = {
 pub unsafe extern "C" fn SysTick() {
     crate::profiling::event_timer_isr_enter();
     with_task_table(|tasks| {
+        // CPU profiling: attribute this tick to whichever task was running when
+        // it fired (the one `CURRENT_TASK_PTR` points at).
+        #[cfg(feature = "cpu-profiling")]
+        {
+            let cur =
+                CURRENT_TASK_PTR.load(Ordering::Relaxed) as *const task::Task;
+            if !cur.is_null() {
+                if let Some(index) =
+                    tasks.iter().position(|t| core::ptr::eq(t, cur))
+                {
+                    sample_cpu(index);
+                }
+            }
+        }
+
         // Load the time before this tick event.
         let t0 = TICKS[0].load(Ordering::Relaxed);
         let t1 = TICKS[1].load(Ordering::Relaxed);

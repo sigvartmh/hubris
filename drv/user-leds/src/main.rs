@@ -63,7 +63,8 @@ cfg_if::cfg_if! {
     else if #[cfg(any(
             target_board = "gemini-bu-1",
             target_board = "gimletlet-1",
-            target_board = "gimletlet-2"
+            target_board = "gimletlet-2",
+            target_board = "nrf54l15dk"
         ))] {
         #[derive(enum_map::Enum, Copy, Clone, FromPrimitive)]
         enum Led {
@@ -669,6 +670,64 @@ fn led_toggle(led: Led) {
 
     let pin = led_gpio_num(led);
     gpio_driver.toggle(pin).unwrap_lite();
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// The nRF54L15 specific bits.
+//
+// Like the STM32F3/4 above, this pokes the GPIO directly without an
+// intermediary driver: a simple push-pull output LED needs no clock gating or
+// pin-mux setup on this part. On the nRF54L15-DK, LED0 is on P2.09 (GPIO port
+// 2, pin 9) and is active-high.
+
+#[cfg(feature = "nrf54l15")]
+use nrf_pac::gpio::vals::{Dir, Input, Pull};
+
+// (GPIO port, pin) for each nRF54L15-DK user LED. All four are active-high.
+#[cfg(feature = "nrf54l15")]
+fn led_pin(led: Led) -> (nrf_pac::gpio::Gpio, usize) {
+    match led {
+        Led::Zero => (nrf_pac::P2_S, 9),   // LED0 = P2.09
+        Led::One => (nrf_pac::P1_S, 10),   // LED1 = P1.10
+        Led::Two => (nrf_pac::P2_S, 7),    // LED2 = P2.07
+        Led::Three => (nrf_pac::P1_S, 14), // LED3 = P1.14
+    }
+}
+
+#[cfg(feature = "nrf54l15")]
+fn enable_led_pins() {
+    for led in [Led::Zero, Led::One, Led::Two, Led::Three] {
+        let (gpio, pin) = led_pin(led);
+        // Drive low first so the LED stays off as we enable the output.
+        gpio.outclr().write(|w| w.set_pin(pin, true));
+        gpio.pin_cnf(pin).write(|w| {
+            w.set_dir(Dir::Output);
+            w.set_input(Input::Disconnect);
+            w.set_pull(Pull::Disabled);
+        });
+    }
+}
+
+#[cfg(feature = "nrf54l15")]
+fn led_on(led: Led) {
+    let (gpio, pin) = led_pin(led);
+    gpio.outset().write(|w| w.set_pin(pin, true));
+}
+
+#[cfg(feature = "nrf54l15")]
+fn led_off(led: Led) {
+    let (gpio, pin) = led_pin(led);
+    gpio.outclr().write(|w| w.set_pin(pin, true));
+}
+
+#[cfg(feature = "nrf54l15")]
+fn led_toggle(led: Led) {
+    let (gpio, pin) = led_pin(led);
+    if gpio.out().read().pin(pin) {
+        gpio.outclr().write(|w| w.set_pin(pin, true));
+    } else {
+        gpio.outset().write(|w| w.set_pin(pin, true));
+    }
 }
 
 mod idl {
