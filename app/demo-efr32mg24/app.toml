@@ -1,0 +1,283 @@
+name = "demo-efr32mg24"
+target = "thumbv8m.main-none-eabihf"
+chip = "../../chips/efr32mg24"
+memory = "memory.toml"
+board = "xg24-rb4187c"
+stacksize = 1024
+
+[kernel]
+name = "demo-efr32mg24"
+requires = {flash = 32768, ram = 8192}
+stacksize = 1024
+features = ["cpu-profiling"]
+
+[tasks.jefe]
+name = "task-jefe"
+priority = 0
+max-sizes = {flash = 16384, ram = 4096}
+start = true
+stacksize = 1536
+notifications = ["fault", "timer"]
+
+# Display SERVER: owns the Sharp Memory LCD + LDMA. Source tasks send it a
+# framebuffer (op DRAW, one read-only lease) and it streams it to the panel.
+# Must be higher priority (lower number) than every source that sends to it.
+[tasks.display]
+name = "task-efr32mg24-display"
+priority = 1
+max-sizes = {flash = 16384, ram = 16384}
+uses = ["gpio", "cmu", "usart0", "ldma", "ldmaxbar"]
+start = true
+stacksize = 8192
+notifications = ["dma-irq", "button-irq"]
+interrupts = {"ldma.irq" = "dma-irq", "gpio.odd" = "button-irq"}
+
+# Interactive serial shell on the WSTK VCOM (EUSART0, 115200 8N1). Also a display
+# SOURCE (mode 2): mirrors the serial terminal onto the LCD.
+[tasks.console]
+name = "task-efr32mg24-console"
+priority = 2
+max-sizes = {flash = 32768, ram = 8192}
+uses = ["gpio", "cmu", "eusart0"]
+start = true
+stacksize = 4096
+task-slots = ["display", "cryptosrv"]
+
+# Display SOURCE (mode 0): the task/CPU monitor.
+[tasks.viewer]
+name = "task-efr32mg24-task-viewer"
+priority = 3
+max-sizes = {flash = 16384, ram = 8192}
+start = false
+stacksize = 4096
+task-slots = ["display"]
+
+# Display SOURCE (mode 1): self-playing pong.
+[tasks.pong]
+name = "task-efr32mg24-pong"
+priority = 4
+max-sizes = {flash = 16384, ram = 8192}
+start = false
+stacksize = 4096
+task-slots = ["display"]
+
+# Display SOURCE (mode 3): Conway's Game of Life.
+[tasks.life]
+name = "task-efr32mg24-life"
+priority = 5
+max-sizes = {flash = 16384, ram = 16384}
+start = false
+stacksize = 4096
+task-slots = ["display"]
+
+# Display SOURCE (mode 4): scrolling CPU-load graph.
+[tasks.cpugraph]
+name = "task-efr32mg24-cpugraph"
+priority = 6
+max-sizes = {flash = 16384, ram = 8192}
+start = false
+stacksize = 4096
+task-slots = ["display"]
+
+# Display SOURCE (mode 5): bouncing HUBRIS logo.
+[tasks.logo]
+name = "task-efr32mg24-logo"
+priority = 7
+max-sizes = {flash = 16384, ram = 8192}
+start = false
+stacksize = 4096
+task-slots = ["display"]
+
+# Display SOURCE (mode 6): warp starfield.
+[tasks.stars]
+name = "task-efr32mg24-stars"
+priority = 8
+max-sizes = {flash = 16384, ram = 8192}
+start = false
+stacksize = 4096
+task-slots = ["display"]
+
+# Display SOURCE (mode 7): hardware-AES (RADIOAES) decryption reveal.
+[tasks.crypto]
+name = "task-efr32mg24-crypto"
+priority = 9
+max-sizes = {flash = 16384, ram = 16384}
+start = false
+stacksize = 4096
+task-slots = ["display", "cryptosrv"]
+
+# Heartbeat: blinks LED0 (PB02) at ~1 Hz.
+[tasks.hello]
+name = "task-efr32mg24-hello"
+priority = 10
+max-sizes = {flash = 8192, ram = 2048}
+uses = ["gpio"]
+start = true
+stacksize = 512
+
+# CPU hog, started/stopped from the console to exercise the CPU display.
+[tasks.load]
+name = "task-efr32mg24-load"
+priority = 11
+max-sizes = {flash = 4096, ram = 512}
+start = false
+stacksize = 256
+
+# Crypto SERVER: sole owner of RADIOAES + the SE mailbox; serializes access so
+# the crypto display mode and the console `se` command can share them safely.
+# Higher priority (lower number) than its clients (console=2, crypto=9).
+[tasks.cryptosrv]
+name = "task-efr32mg24-cryptosrv"
+priority = 1
+max-sizes = {flash = 49152, ram = 49152}
+uses = ["cmu", "radioaes", "semailbox"]
+start = true
+stacksize = 4096
+notifications = ["aes-irq"]
+interrupts = {"radioaes.irq" = "aes-irq"}
+
+# Display SOURCE (mode 8): SHA-256 avalanche visualizer.
+[tasks.shaviz]
+name = "task-efr32mg24-shaviz"
+priority = 9
+max-sizes = {flash = 16384, ram = 16384}
+start = false
+stacksize = 4096
+task-slots = ["display", "cryptosrv"]
+
+# Display SOURCE (mode 9): AES-CMAC tamper-detect.
+[tasks.mactamper]
+name = "task-efr32mg24-mactamper"
+priority = 9
+max-sizes = {flash = 16384, ram = 16384}
+start = false
+stacksize = 4096
+task-slots = ["display", "cryptosrv"]
+
+# Display SOURCE (mode 10): hardware-TRNG vs software-PRNG entropy rain.
+[tasks.trngrain]
+name = "task-efr32mg24-trngrain"
+priority = 9
+max-sizes = {flash = 16384, ram = 16384}
+start = false
+stacksize = 4096
+task-slots = ["display", "cryptosrv"]
+
+# Display SOURCE (mode 11): ECDSA P-256 sign/verify (fresh key, forgery rejected).
+[tasks.ecdsa]
+name = "task-efr32mg24-ecdsa"
+priority = 9
+max-sizes = {flash = 16384, ram = 16384}
+start = false
+stacksize = 4096
+task-slots = ["display", "cryptosrv"]
+
+# Display SOURCE (mode 12): die-temperature scrolling graph (EMU sensor).
+[tasks.temp]
+name = "task-efr32mg24-temp"
+priority = 9
+max-sizes = {flash = 16384, ram = 8192}
+uses = ["emu"]
+start = false
+stacksize = 4096
+task-slots = ["display"]
+
+# Display SOURCE: self-playing Snake (games group).
+[tasks.snake]
+name = "task-efr32mg24-snake"
+priority = 9
+max-sizes = {flash = 16384, ram = 16384}
+start = false
+stacksize = 8192
+task-slots = ["display"]
+
+# Display SOURCE: animated Julia-set fractal (visual/math group).
+[tasks.fractal]
+name = "task-efr32mg24-fractal"
+priority = 9
+max-sizes = {flash = 16384, ram = 16384}
+start = false
+stacksize = 4096
+task-slots = ["display"]
+
+# Display SOURCE: hash-chain / blockchain tamper demo (crypto group).
+[tasks.hashchain]
+name = "task-efr32mg24-hashchain"
+priority = 9
+max-sizes = {flash = 16384, ram = 16384}
+start = false
+stacksize = 4096
+task-slots = ["display", "cryptosrv"]
+
+# Display SOURCE: AES avalanche / diffusion demo (crypto group).
+[tasks.aesava]
+name = "task-efr32mg24-aesava"
+priority = 9
+max-sizes = {flash = 16384, ram = 16384}
+start = false
+stacksize = 4096
+task-slots = ["display", "cryptosrv"]
+
+# Display SOURCE: AES-GCM authenticated-encryption demo (crypto group).
+[tasks.gcm]
+name = "task-efr32mg24-gcm"
+priority = 9
+max-sizes = {flash = 16384, ram = 16384}
+start = false
+stacksize = 4096
+task-slots = ["display", "cryptosrv"]
+
+# Display SOURCE: "matrix rain" effect (visual/math group).
+[tasks.matrix]
+name = "task-efr32mg24-matrix"
+priority = 9
+max-sizes = {flash = 16384, ram = 16384}
+start = false
+stacksize = 4096
+task-slots = ["display"]
+
+# Display SOURCE: demoscene plasma effect (visual/math group).
+[tasks.plasma]
+name = "task-efr32mg24-plasma"
+priority = 9
+max-sizes = {flash = 16384, ram = 16384}
+start = false
+stacksize = 4096
+task-slots = ["display"]
+
+# Display SOURCE: AES throughput benchmark, RADIOAES vs SE mailbox (crypto group).
+[tasks.aesbench]
+name = "task-efr32mg24-aesbench"
+priority = 9
+max-sizes = {flash = 16384, ram = 16384}
+start = false
+stacksize = 4096
+task-slots = ["display", "cryptosrv"]
+
+# Display SOURCE: X25519 ECDH key-exchange demo (crypto group).
+[tasks.ecdh]
+name = "task-efr32mg24-ecdh"
+priority = 9
+max-sizes = {flash = 16384, ram = 16384}
+start = false
+stacksize = 4096
+task-slots = ["display", "cryptosrv"]
+
+[tasks.cryptobench]
+name = "task-efr32mg24-cryptobench"
+priority = 9
+max-sizes = {flash = 16384, ram = 16384}
+start = false
+stacksize = 4096
+task-slots = ["display", "cryptosrv"]
+
+[tasks.idle]
+name = "task-idle"
+priority = 13
+max-sizes = {flash = 256, ram = 256}
+stacksize = 256
+start = true
+# The kernel clocks SysTick from the CPU clock, which `wfi` gates in sleep,
+# freezing the kernel tick. `insomniac` makes idle spin instead of sleeping so
+# the tick keeps running. Trade-off: no low-power sleep in this bring-up.
+features = ["insomniac"]

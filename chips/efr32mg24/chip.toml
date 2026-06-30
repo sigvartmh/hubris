@@ -1,0 +1,70 @@
+# Peripheral map for the Silicon Labs EFR32MG24 (Cortex-M33, Series 2).
+#
+# Addresses are the *secure* peripheral aliases (TrustZone is not enabled, and
+# the core boots in the Secure state). The non-secure alias of any block is its
+# secure address + 0x1000_0000.
+#
+# The app `main()` configures SWO trace directly (CMU + GPIO) before the kernel
+# starts. Unprivileged tasks reach hardware only through MPU-granted regions
+# declared here and claimed with `uses` in app.toml.
+
+# GPIO, secure alias. Granted to the blink task so it can drive an LED pin.
+# (The whole GPIO bus clock is enabled once in `main()` during SWO setup.)
+[gpio]
+address = 0x4003c000
+# 0x3000 so the display task can reach the EXTI IF_CLR alias (base + 0x2000 +
+# 0x420 = 0x4003e420) to ack button interrupts.
+size = 0x3000
+# BTN0=PB01, BTN1=PB03 route to EXTI lines 1 & 3 -> both odd -> GPIO_ODD.
+interrupts = { odd = 25 }
+
+# Clock Management Unit (secure alias). The console task enables its own EUSART0
+# bus clock through this.
+[cmu]
+address = 0x40008000
+size = 0x1000
+
+# EUSART0 (secure alias) -- the WSTK VCOM UART (TX=PA08, RX=PA09).
+[eusart0]
+address = 0x4b010000
+size = 0x1000
+
+# USART0 (secure alias) -- SPI master for the Memory LCD (MOSI=PC01, SCLK=PC03).
+[usart0]
+address = 0x4005c000
+size = 0x1000
+
+# LDMA controller + its peripheral-request crossbar (secure aliases). The
+# display task uses an LDMA channel to stream the framebuffer to USART0.
+[ldma]
+address = 0x40040000
+# 0x3000 so the task can reach the IF_CLR alias (base + 0x2000) to ack the
+# channel-done interrupt flag.
+size = 0x3000
+interrupts = { irq = 21 }
+
+[ldmaxbar]
+address = 0x40044000
+size = 0x1000
+
+# RADIOAES (Silex BA411E AES accelerator), secure alias. A scatter-gather DMA
+# engine: FETCHADDR/PUSHADDR point at descriptor chains in RAM. Used by the
+# crypto demo for hardware AES.
+[radioaes]
+address = 0x44000000
+# 0x1000 covers the SYMCRYPTO register block incl. IF_CLR (offset 0x30), so the
+# crypto server can ack the pusher-stopped interrupt without an alias window.
+size = 0x1000
+interrupts = { irq = 48 }
+
+# Secure Engine mailbox host interface (secure alias). Command FIFO to the SE;
+# the crypto demo uses it for the hardware TRNG (true-random key).
+[semailbox]
+address = 0x4c000000
+size = 0x1000
+
+# Energy Management Unit (secure alias). The temperature demo reads the built-in
+# die temperature sensor (EMU_STATUS @ +0x84, EMU_TEMP @ +0x88).
+[emu]
+address = 0x40004000
+size = 0x1000

@@ -1,0 +1,4 @@
+# Silicon Labs xG24-RB4187C radio board (EFR32MG24B220F1536IM48), typically on a
+# WSTK mainboard whose onboard J-Link provides SWD + SWO.
+[probe-rs]
+chip-name = "EFR32MG24B220F1536IM48"

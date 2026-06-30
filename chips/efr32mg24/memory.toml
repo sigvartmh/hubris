@@ -1,0 +1,21 @@
+# Memory map for the Silicon Labs EFR32MG24 (Cortex-M33, Series 2).
+#
+# Specifically the EFR32MG24B220F1536IM48: 1536 KiB main flash, 256 KiB SRAM.
+# The core boots and executes in place from main flash at 0x0800_0000; SRAM is
+# at 0x2000_0000. Values taken from the device header
+# (ref/simplicity_sdk .../EFR32MG24/Include/efr32mg24b220f1536im48.h):
+# FLASH_BASE = 0x0800_0000, FLASH_SIZE = 0x0018_0000,
+# SRAM_BASE  = 0x2000_0000, SRAM_SIZE  = 0x0004_0000.
+
+[[flash]]
+address = 0x08000000
+size = 0x00180000   # 1536 KiB
+read = true
+execute = true
+
+[[ram]]
+address = 0x20000000
+size = 0x00040000   # 256 KiB
+read = true
+write = true
+execute = false
