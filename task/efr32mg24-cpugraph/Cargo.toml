@@ -1,0 +1,17 @@
+[package]
+name = "task-efr32mg24-cpugraph"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+userlib = { path = "../../sys/userlib", features = ["panic-messages"] }
+hubris-num-tasks = { path = "../../sys/num-tasks" }
+efr32mg24-gfx = { path = "../../lib/efr32mg24-gfx" }
+
+[[bin]]
+name = "task-efr32mg24-cpugraph"
+test = false
+bench = false
+
+[lints]
+workspace = true

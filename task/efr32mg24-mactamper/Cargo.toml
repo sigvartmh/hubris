@@ -1,0 +1,17 @@
+[package]
+name = "task-efr32mg24-mactamper"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+userlib = { path = "../../sys/userlib", features = ["panic-messages"] }
+efr32mg24-gfx = { path = "../../lib/efr32mg24-gfx" }
+efr32mg24-crypto = { path = "../../lib/efr32mg24-crypto" }
+
+[[bin]]
+name = "task-efr32mg24-mactamper"
+test = false
+bench = false
+
+[lints]
+workspace = true

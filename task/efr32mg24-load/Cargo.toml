@@ -1,0 +1,15 @@
+[package]
+name = "task-efr32mg24-load"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+userlib = { path = "../../sys/userlib" }
+
+[[bin]]
+name = "task-efr32mg24-load"
+test = false
+bench = false
+
+[lints]
+workspace = true

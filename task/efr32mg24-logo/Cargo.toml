@@ -1,0 +1,16 @@
+[package]
+name = "task-efr32mg24-logo"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+userlib = { path = "../../sys/userlib", features = ["panic-messages"] }
+efr32mg24-gfx = { path = "../../lib/efr32mg24-gfx" }
+
+[[bin]]
+name = "task-efr32mg24-logo"
+test = false
+bench = false
+
+[lints]
+workspace = true

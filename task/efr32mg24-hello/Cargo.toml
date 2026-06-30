@@ -1,0 +1,18 @@
+[package]
+name = "task-efr32mg24-hello"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+userlib = { path = "../../sys/userlib", features = ["panic-messages"] }
+ringbuf = { path = "../../lib/ringbuf" }
+
+# This section is here to discourage RLS/rust-analyzer from doing test builds,
+# since test builds don't work for cross compilation.
+[[bin]]
+name = "task-efr32mg24-hello"
+test = false
+bench = false
+
+[lints]
+workspace = true

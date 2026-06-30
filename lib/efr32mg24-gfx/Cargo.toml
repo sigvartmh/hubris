@@ -1,0 +1,15 @@
+[package]
+name = "efr32mg24-gfx"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+embedded-graphics-core = "0.4"
+
+[lib]
+test = false
+doctest = false
+bench = false
+
+[lints]
+workspace = true
