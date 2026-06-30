@@ -83,8 +83,9 @@ fn print_help() {
           \x20 time                kernel uptime\r\n\
           \x20 echo <text>         echo text back\r\n\
           \x20 bench [alg]         crypto bench on M33 (alg: aes aes256\r\n\
-          \x20                     ctr cbc ccm sha sha512 sha384 hmac cmac\r\n\
-          \x20                     gcm chacha ecdh ed25519 p256; def all)\r\n\
+          \x20                     ctr cbc sha sha512 sha384 hmac cmac\r\n\
+          \x20                     gcm chacha ecdh ed25519 p256 rsa;\r\n\
+          \x20                     default all)\r\n\
           \x20 rng [n]             CRACEN TRNG random bytes (n<=32)\r\n\
           progs: blink breathe compute benchmark console\r\n\
           (BTN1 returns to this shell)\r\n",

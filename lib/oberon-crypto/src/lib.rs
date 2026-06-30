@@ -263,6 +263,103 @@ pub fn chacha20_poly1305_encrypt(
     }
 }
 
+/// Oberon RSA key descriptors (raw modexp primitives). Pointers reference the
+/// caller-provided `key_mem` after init.
+#[repr(C)]
+struct RsaPubKey {
+    n: *const u32,
+    e: u32,
+    blocks: u32,
+}
+#[repr(C)]
+struct RsaKey {
+    n: *const u32,
+    d: *const u32,
+    blocks: u32,
+}
+
+unsafe extern "C" {
+    fn ocrypto_rsa_init_pub_key(
+        key: *mut RsaPubKey,
+        key_mem: *mut u32,
+        n: *const u8,
+        n_len: usize,
+        e: u32,
+    ) -> i32;
+    fn ocrypto_rsa_pub_exp(
+        c: *mut u8,
+        c_len: usize,
+        m: *const u8,
+        m_len: usize,
+        pk: *const RsaPubKey,
+        mem: *mut u32,
+    ) -> i32;
+    fn ocrypto_rsa_init_key(
+        key: *mut RsaKey,
+        key_mem: *mut u32,
+        n: *const u8,
+        n_len: usize,
+        d: *const u8,
+        d_len: usize,
+    ) -> i32;
+    fn ocrypto_rsa_exp(
+        m: *mut u8,
+        m_len: usize,
+        c: *const u8,
+        c_len: usize,
+        key: *const RsaKey,
+        mem: *mut u32,
+    ) -> i32;
+}
+
+/// RSA-2048 public modexp `out = m^e mod n` (raw). `key_mem` >= 64 words,
+/// `scratch` >= 704 words. Returns false on init/exp error.
+pub fn rsa2048_pub_exp(
+    n: &[u8; 256],
+    e: u32,
+    m: &[u8; 256],
+    out: &mut [u8; 256],
+    key_mem: &mut [u32],
+    scratch: &mut [u32],
+) -> bool {
+    let mut key = RsaPubKey { n: core::ptr::null(), e: 0, blocks: 0 };
+    unsafe {
+        if ocrypto_rsa_init_pub_key(&mut key, key_mem.as_mut_ptr(), n.as_ptr(), 256, e) != 0
+        {
+            return false;
+        }
+        ocrypto_rsa_pub_exp(out.as_mut_ptr(), 256, m.as_ptr(), 256, &key, scratch.as_mut_ptr())
+            == 0
+    }
+}
+
+/// RSA-2048 private modexp `out = m^d mod n` (raw). `key_mem` >= 128 words,
+/// `scratch` >= 1664 words. Returns false on init/exp error.
+pub fn rsa2048_priv_exp(
+    n: &[u8; 256],
+    d: &[u8; 256],
+    m: &[u8; 256],
+    out: &mut [u8; 256],
+    key_mem: &mut [u32],
+    scratch: &mut [u32],
+) -> bool {
+    let mut key = RsaKey { n: core::ptr::null(), d: core::ptr::null(), blocks: 0 };
+    unsafe {
+        if ocrypto_rsa_init_key(
+            &mut key,
+            key_mem.as_mut_ptr(),
+            n.as_ptr(),
+            256,
+            d.as_ptr(),
+            256,
+        ) != 0
+        {
+            return false;
+        }
+        ocrypto_rsa_exp(out.as_mut_ptr(), 256, m.as_ptr(), 256, &key, scratch.as_mut_ptr()) == 0
+    }
+}
+
 /// P-256 public key `pk` (64 B, big-endian X||Y) from secret key `sk`.
 pub fn p256_public_key(sk: &[u8; 32], pk: &mut [u8; 64]) -> bool {
     unsafe { ocrypto_ecdh_p256_public_key(pk.as_mut_ptr(), sk.as_ptr()) == 0 }

@@ -1,0 +1,3 @@
+cargo:rustc-link-search=/Users/siho/dev/rust/hubris/flpr/target/riscv32emc-unknown-none-elf/release/build/flpr-firmware-fda3f158e7cfe79b/out
+cargo:rerun-if-changed=link.x
+cargo:rerun-if-changed=build.rs

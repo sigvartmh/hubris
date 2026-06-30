@@ -298,10 +298,9 @@ fn handle_command(state: &mut State) {
                 Some(b"sha384") => 12,
                 Some(b"ctr") => 13,
                 Some(b"cbc") => 14,
-                Some(b"ccm") => 15,
+                Some(b"rsa") => 16,
                 Some(_) => {
-                    r.s(b"algs: all aes aes256 ctr cbc ccm sha sha512 \
-                          sha384 hmac cmac gcm chacha ecdh ed25519 p256\r\n");
+                    r.s(b"algs: all aes aes256 ctr cbc sha sha512 sha384 hmac cmac gcm chacha ecdh ed25519 p256 rsa\r\n");
                     r.send();
                     return;
                 }

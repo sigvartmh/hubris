@@ -1,0 +1,1 @@
+/Users/siho/dev/rust/hubris/flpr/target/riscv32emc-unknown-none-elf/release/breathe: /Users/siho/dev/rust/hubris/flpr/build.rs /Users/siho/dev/rust/hubris/flpr/link.x /Users/siho/dev/rust/hubris/flpr/src/bin/breathe.rs /Users/siho/dev/rust/hubris/flpr/src/lib.rs

@@ -63,7 +63,7 @@ interrupts = {"vpr00.irq" = "vevif-irq"}
 [tasks.cryptosrv]
 name = "task-nrf54l15-cryptosrv"
 priority = 5
-max-sizes = {flash = 65536, ram = 32768}
+max-sizes = {flash = 98304, ram = 32768}
 uses = ["cracen", "cracencore"]
 extern-regions = ["crypto_sram"]
 start = true

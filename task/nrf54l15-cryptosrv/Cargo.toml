@@ -1,0 +1,19 @@
+[package]
+name = "task-nrf54l15-cryptosrv"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+userlib = { path = "../../sys/userlib", features = ["panic-messages"] }
+oberon-crypto = { path = "../../lib/oberon-crypto" }
+
+# This section is here to discourage RLS/rust-analyzer from doing test builds,
+# since test builds don't work for cross compilation.
+[[bin]]
+name = "task-nrf54l15-cryptosrv"
+test = false
+doctest = false
+bench = false
+
+[lints]
+workspace = true
